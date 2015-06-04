@@ -23,23 +23,17 @@ exports.serveAssets = function(response, asset, callback) {
     'ico': "image/x-icon"
   };
   headers['Content-Type'] = exts[ext];
-
-
-  console.log('asset: ', asset);
+  // console.log('asset: ', asset);
   fs.readFile(asset, function (err, data) {
     if (err) throw err;
     exports[callback](response, data);
   });
-
-
 };
 
 exports.sendResponse = function(response, data, statusCode){
   statusCode = statusCode || 200;
   response.writeHead(statusCode, headers);
   response.end(data);
-  // console.log("DATA:::", data);
 };
-
 
 // As you progress, keep thinking about what helper functions you can put here!

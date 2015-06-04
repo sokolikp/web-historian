@@ -26,16 +26,21 @@ exports.initialize = function(pathsObj){
 // modularize your code. Keep it clean!
 
 exports.readListOfUrls = function(){
+  //look inside sites.txt and read each URL; return array/object of list
 };
 
-exports.isUrlInList = function(){
+exports.isUrlInList = function( /* URL */ ){
+  //checks whether a specific URL is contained in sites.txt; return boolean
 };
 
 exports.addUrlToList = function(){
+  //takes URL as string, appends to sites.txt
 };
 
 exports.isURLArchived = function(){
+  //checks whether URL is contained in sites directory
 };
 
 exports.downloadUrls = function(){
+  //download all URLs in archive/place them in cache
 };
