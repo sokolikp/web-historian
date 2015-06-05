@@ -11,56 +11,45 @@ exports.handleRequest = function(request, response){
   var asset;
   //Handle POST requests
   if(request.method === 'POST') {
-    httpHelper.collectData(request, function(url) {
-      archive.addUrlToList(url.substr(4), function(err) {
-        if(err) throw err;
-        console.log('Successfully added site to list');
-
-        archive.isURLArchived(url, function(exists){
-          if(exists) {
-            asset = archive.paths.archivedSites + "/" + url;
-            httpHelper.serveAssets(response, asset, 'sendResponse');
-          }
-          else {
-            asset = archive.paths.siteAssets + '/loading.html';
-            httpHelper.serveAssets(response, asset, 'sendResponse');
-          }
-        });
-
-
+    httpHelper.collectData(request, function(data) {
+      var url = data.substr(4);
+      //check whether url is in sites.txt
+      archive.isUrlInList(url, function(found) {
+        if(found) {
+          //check whether url is archived
+          archive.isUrlArchived(url, function(exists) {
+            //load the page if we have it
+            if(exists) {
+              httpHelper.sendRedirect(response, '/' + url);
+            }
+            //redirect to loading page if we don't have it
+            else {
+              httpHelper.sendRedirect(response, '/loading.html');
+            }
+          });
+        }
+        //add to sites.txt
+        else {
+          archive.addUrlToList(url, function() {
+            httpHelper.sendRedirect(response, '/loading.html');
+          });
+        }
       });
     });
-    // asset = archive.paths.siteAssets + '/loading.html';
-    // httpHelper.serveAssets(response, asset, 'sendResponse');
   }
   //Handle GET requests (local and AJAX)
   else if(request.method === 'GET') {
     //request local index file (load page)
-    if(pathname === '/') {
-      asset = archive.paths.siteAssets + '/index.html';
-      httpHelper.serveAssets(response, asset, 'sendResponse');
-      // requestStatic(request, response, '/index.html');
-    }
-    //request local style sheet (load page)
-    else if(pathname === '/styles.css') {
-      asset = archive.paths.siteAssets + pathname;
-      httpHelper.serveAssets(response, asset, 'sendResponse');
-    }
-    // request external page
-    else {
-      console.log(pathname);
-      // console.log("Archived? ", archive.isURLArchived(pathname));
-      archive.isURLArchived(pathname, function(exists){
-        if(exists) {
-          asset = archive.paths.archivedSites + pathname;
-          httpHelper.serveAssets(response, asset, 'sendResponse');
+    var urlPath = pathname === '/' ? '/index.html' : pathname;
+    httpHelper.serveAssets(response, urlPath, function() {
+      archive.isUrlInList(urlPath.slice(1), function(found) {
+        if(found) {
+          httpHelper.sendRedirect(response, '/loading.html');
         }
         else {
-          httpHelper.sendResponse(response, 'error!', 404);
+          httpHelper.send404(response);
         }
       });
-    }
-    //   checkArchive(response, file);
-    // }
+    });
   }
 };

@@ -10,23 +10,37 @@ exports.headers = headers = {
   'Content-Type': "text/html"
 };
 
-exports.serveAssets = function(response, asset, callback) {
-  // Write some code here that helps serve up your static files!
-  // (Static files are things like html (yours or archived from others...), css, or anything that doesn't change often.)
+exports.send404 = function(response) {
+  exports.sendResponse(response, '404 Page Not Found', 404);
 
-  var ext = asset.substr(asset.indexOf('.') + 1, asset.length);
-  var exts = {
-    'html':  "text/html",
-    'css': "text/css",
-    'gif': "image/gif",
-    'js': "application/javascript",
-    'ico': "image/x-icon"
-  };
-  headers['Content-Type'] = exts[ext];
-  // console.log('asset: ', asset);
-  fs.readFile(asset, function (err, data) {
-    if (err) throw err;
-    exports[callback](response, data);
+};
+
+exports.sendRedirect = function(response, url) {
+  response.writeHead(302, {Location: url});
+  // fs.readFile(archive.)
+  response.end();
+};
+
+exports.serveAssets = function(response, asset, callback) {
+  //check public/main folder (for index or style sheet)
+  fs.readFile(archive.paths.siteAssets + asset, function(err, data) {
+    //if file does not exist, look in archives
+    if(err) {
+      fs.readFile(archive.paths.archivedSites + asset, function(err, data) {
+        //file does not exist in archives - 404 error (or callback)
+        if(err) {
+          callback ? callback() : exports.send404(response);
+        }
+        //file exists - serve it
+        else {
+          exports.sendResponse(response, data);
+        }
+      });
+    }
+    //file exists - serve it
+    else {
+      exports.sendResponse(response, data);
+    }
   });
 };
 

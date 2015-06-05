@@ -26,46 +26,47 @@ var initialize = function(pathsObj){
 // The following function names are provided to you to suggest how you might
 // modularize your code. Keep it clean!
 
-var readListOfUrls = function(){
+var readListOfUrls = function(callback){
   //look inside sites.txt and read each URL; return array/object of list
+  fs.readFile(paths.list, function(err, data) {
+    var sites = data.toString().split('\n');
+    if(callback) {
+      callback(sites);
+    }
+  });
 };
 
-var isUrlInList = function(url){
+var isUrlInList = function(url, callback){
   //checks whether a specific URL is contained in sites.txt; return boolean
-  var check = false;
-  new lazy(fs.createReadStream(paths.list))
-    .lines
-    .forEach(function(line) {
-      console.log(line.toString());
-      if(line === url + '\n') {
-        check = true;
-      }
-    }
-  ).on('pipe', function() {
-  // all done
-    return check;
+  exports.readListOfUrls(function(sites) {
+    var found = _.any(sites, function(site, i) {
+      return site.match(url);
+    });
+    callback(found);
   });
 };
 
 var addUrlToList = function(url, callback){
   //takes URL as string, appends to sites.txt
   console.log('adding to list');
-  if(!isUrlInList(url)) {
-    fs.appendFile(paths.list, url + '\n', function(err) {
-      callback(err);
-    });
-  }
+  fs.appendFile(paths.list, url + '\n', function(err) {
+    callback();
+  });
 };
 
 var isURLArchived = function(url, callback){
   //checks whether URL is contained in sites directory
-  return fs.exists(paths.archivedSites +"/"+ url, function(exists){
+  fs.exists(paths.archivedSites +"/" + url, function(exists){
     callback(exists);
   });
 };
 
-downloadUrls = function(){
+downloadUrls = function(URLs){
   //download all URLs in archive/place them in cache
+  _.each(URLs, function(url) {
+    if(!url) {return; }
+    request('http://' + url).pipe(fs.createWriteStrem(exports.paths.archivedSites + "/" + url));
+  });
 };
 
 exports.paths = paths;
